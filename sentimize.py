@@ -1,5 +1,6 @@
-import json, csv, os
+import json, csv, os, sys
 from nltk.corpus import stopwords
+from datetime import datetime
 
 stopWords = stopwords.words("english")
 
@@ -20,19 +21,37 @@ count = 0
 featureCount = features.copy()
 featureCount["sentiment"] = 10000
 
-with open("reviews.csv", "w", newline="") as outfile:
+if len(sys.argv) > 1:
+    directory = sys.argv[1]
+else:
+    sys.exit()
+
+if len(sys.argv) > 2:
+    iterations = int(sys.argv[2])
+else:
+    iterations = 1000
+
+if len(sys.argv) > 3:
+    hitRequirement = int(sys.argv[3])
+else:
+    hitRequirement = 1
+now = datetime.now()
+outfilename = directory.split("/")[-2] + str(now.year) + str(now.month) + str(now.day) + str(now.hour) + str(now.minute)
+
+with open(outfilename+".csv", "w", newline="") as outfile:
     writer = csv.writer(outfile)
     writer.writerow(list(features.keys()))
-    directory = "amazon reviews/laptops/"
+
     for filename in os.listdir(directory):
-        if(count >= 1000):
+        if(count >= iterations):
             break
         with open(directory+filename) as file:
             archive = json.load(file)
             for review in archive["Reviews"]:
                 content = review["Content"]
-                rating = float(review["Overall"])
+                rating = review["Overall"]
                 if content and rating:
+                    rating = float(rating)
                     usefulWords = [w for w in content.split() if not w in stopWords]
 
                     for feature in features:
@@ -55,7 +74,7 @@ with open("reviews.csv", "w", newline="") as outfile:
                         features[feature] = 0
 
 featureNames = list(features.keys())
-with open("reviews.csv", newline="") as infile, open("cleaned.csv", "w", newline="") as outfile:
+with open(outfilename+".csv", newline="") as infile, open(outfilename+"-cleaned.csv", "w", newline="") as outfile:
     writer = csv.writer(outfile)
     reader = csv.reader(infile)
     for row in reader:
@@ -63,7 +82,7 @@ with open("reviews.csv", newline="") as infile, open("cleaned.csv", "w", newline
         names = featureNames.copy()
         while len(row) > 0:
             val = row.pop()
-            if(featureCount[names.pop()] >= 10):
+            if(featureCount[names.pop()] >= hitRequirement):
                 outlist.append(val)
 
         writer.writerow(outlist)
