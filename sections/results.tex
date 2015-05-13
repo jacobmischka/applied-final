@@ -1,1 +1,54 @@
 \section{Results and Discussion}
+Input data is 5000 entries from the mobile phone genre of product reviews. If a review did not have both the textual review and numeric rating present, or if it received a rating considered neither definitely good or bad, it was discounted resulting in 4606 usable reviews.
+
+\begin{center}
+\begin{tabular}{ | l | r | r | }
+    \hline
+    Naive Bayes & Negative rating & Positive rating \\ \hline
+    Negative estimate & 1133 & 3384 \\ \hline
+    Positive estimate & 33 & 56 \\
+    \hline
+\end{tabular}
+
+\begin{tabular}{ | l | r | r | }
+    \hline
+    SVM & Negative rating & Positive rating \\ \hline
+    Negative estimate & 0 & 0 \\ \hline
+    Positive estimate & 1166 & 3440 \\
+    \hline
+\end{tabular}
+\end{center}
+
+The above tables show the output from the R script's machine learning algorithm sentiment estimations versus the given values when using no feature threshold. The results are skewed, and thus accuracy is skewed, because the Naive Bayes algorithm leans heavily toward a negative estimate, while the support vector machine algorithm leans toward a positive estimate. In addition, the SVM algorthm implimentation in R that was used fails when too many features are used, for an unknown reason. Because of this, some SVN results are considered inapplicable, and they are simply equivalent to estimating that each review is positive.
+
+\begin{center}
+\begin{tabular}{ | c | c || r | r | }
+    \hline
+    System & \# of features & NB & SVM \\ \hline
+    Mischka & 6859 & 25.8\% & N/A \\ \hline
+    Pang \& Lee &  16165 & 81.0\% & 82.9\% \\
+    \hline
+\end{tabular}
+\end{center}
+
+As Pang and Lee did not state if they modified resulting data, it has been assumed that they did not do so. Thus, they will be compared to results obtained from the unfiltered feature presence CSV for this system.
+
+\begin{center}
+\begin{tabular}{ | c || r | r | }
+    \hline
+    Feature threshold & NB & SVM \\ \hline
+    0 & 25.8\% & N/A \\ \hline
+    1 & 25.8\% & N/A \\ \hline
+    5 & 35.6\% & 87.1\% \\ \hline
+    10 & 45.3\% & 87.0\% \\ \hline
+    20 & 55.7\% & 86.0\% \\ \hline
+    50 & 61.8\% & 86.5\% \\
+    \hline
+\end{tabular}
+\end{center}
+
+By utilizing the feature tally threshold, the accuracy of estimates overall seems to increase. Once there are few enough features for the SVM algorithm to complete, the accuracy is already impressive. However, this is only because a significantly larger amount of reviews happened to be positive, which SVM favors in this system.
+
+As one can see, the results are much less than desirable. While using a feature threshold indeed increases accuracy, Pang and Lee's similar system achieves much higher accuracy without resorting to such measures. This can be attributed to several factors. First, the scale of the competing system is much larger. More features were used, and much more data was used to train the machines. In addition, unfortunately for as heavily intensive operations as these, even a relatively high-end desktop computer is not powerful enough to complete tasks in a short time, hence the 5000 review limit for this system. The unknown reason why Naive Bayes favors negative estimates while SVM favors positive, and the apparent issues with R's SVM implementation for a large number of features also result in undesirable results. Finally, the quality of the reviews themselves are brought into question, as very short documents obviously will have fewer feature match opportunities and will thus be inherently less accurate.
+
+Given enough computing power to use more reviews, and if SVM's issues are worked out, there is no apparent reason why this system cannot achieve results similar to Pang and Lee's system. 

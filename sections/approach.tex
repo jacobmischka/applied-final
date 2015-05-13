@@ -1,1 +1,32 @@
 \section{Approach}
+The system is composed of two primary components: a rather short python script and a very short R script. The python script is used to parse and manipulate the raw review text as well as various pieces of relevant metadata. The data is extracted from JSON files that each represent the reviews for a given product on Amazon.com. The data is separated into six categories: cameras, laptops, mobile phones, tablets, TVs, and video surveillance equipment. Each product may have metadata associated with it, such as price, features, a product name, a URL for an image of the product, and a unique ID. In a large-scale system attempting to apply machine learning to estimate product reviews in a production environment, such information would be useful in making more meaningful matches and more accurately estimating sentiment based on a given product or type of product, as well as finding sentiment about a particular feature or part of the products instead of the entire product itself. Each product then has an arbitrary number of reviews, which contain the text used to estimate sentiment, as well as a review title, author, user-input numerical rating for the product, date, and a unique review ID. The length of the text review is very inconsistent, as is to be expected with voluntary user input. They range from as brief as 25 words before filtering out stop words to over ten times longer.
+
+\begin{figure}
+\begin{lstlisting}
+{
+    "Reviews": [{
+        "Title": "nook hd color",
+        "Author": "Paul prevost",
+        "ReviewID": "R1MAK9KU0763PW",
+        "Overall": "5.0",
+        "Content": "this can very fast love it so far never had a colored onenow I will never go back to black and white",
+        "Date": "December 14, 2013"
+    }, ...],
+    "ProductInfo": {
+        "Price": "$229.00",
+        "Features": "NOOK HD 7\" 16GB Tablet",
+        "Name": "NOOK HD 7\" 16GB Tablet",
+        "ImgURL": "http://ecx.images-amazon.com/images/I/41jpVvVz41L._SY300_.jpg",
+        "ProductID": "1400501520"
+    }
+}
+\end{lstlisting}
+\caption{}
+\end{figure}
+
+
+The python script is relatively simple and relatively brief. First, it loads the two lists of features used by the machine learning algorithms, courtesy of Bing Liu, Minqing Hu, and Junsheng Cheng \cite{Liu:2005:OOA:1060745.1060797}. These lists are very thorough, and contain almost 7,000 words or phrases combined. After caching these words, the script then loads the reviews from their respective JSON files. The only pieces of data being used are the user-input numerical rating of the product, to be used for labeling the textual reviews, and the textual reviews themselves. Then, stopwords, useless words such as "of" or "to", are filtered from the text in order to provide the most meaningful words in the review, or \textit{document}. The stopwords used are found in the Natural Language Toolkit, which contains 127 words. If a review contains both a numerical rating and a textual review, the script will then use the rating number to label the documents. This system considers reviews with a rating between 1 and 2 (inclusive) to be negative, and reviews with ratings between 4 and 5 (inclusive) to be positive. These labels are used by the algorithms when training to recognize the sentiment of a document. Each word in the feature lists that are present in the review are then marked as present, and the overall tally of each feature present is increased for every match. Finally, a 1 or a 0 is written to the output CSV file, representing each feature and if it is present or not present in the document.
+
+Once the requested number of reviews are processed and written, the resulting CSV document would be enough to attempt the machine learning algorithms. However, in order to attempt to get more accurate results, a second operation is run by the script. This uses the tally count for each feature, and compares them to an input threshold. If the number of tallies is greater than or equal to the threshold, the resulting feature will be kept. However, if this is not the case, the feature will be filtered out when the CSV is rewritten to a second "cleaned" CSV file which can then be processed by the machine learning algorithms. This accomplishes several things. First, the resulting output will have much fewer features to be recorded and processed, resulting in a smaller file itself. A smaller number of features also greatly decreases the processing time for the machine learning algorithms. Finally, this potentially can provide more accurate results as only features that are more common and prevalent are being used to estimate the sentiment of the text. This process simply reads in the first output CSV file, and then only rewrites the values of features that have the required number of overall hits to the second, cleaned CSV file.
+
+Finally, any resulting CSV file can be read by the simple R script. The script loads the data from the CSV file and creates models for the Naive Bayes and support vector machines (SVM) algorithms. Then, each model is used to predict the very reviews that were used to "teach" the models. A table is then printed output for each algorithm displaying the positively and negavitely estimated reviews versus the actual user-input labels for each review. The entire R script is only 10 lines of code, though it is by far the most costly and resource intensive piece of the system.

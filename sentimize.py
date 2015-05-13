@@ -1,3 +1,6 @@
+# Jacob Mischka
+# Usage: python sentimize.py directory_containing_review_jsons [number_of_reviews] [feature_threshold]
+
 import json, csv, os, sys
 from nltk.corpus import stopwords
 from datetime import datetime
